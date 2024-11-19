@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Tests</title>
+</head>
+<body>
+    <h1>Upcoming Tests</h1>
+    <div id="upcomingTests"></div>
+
+    <script>
+        function loadUpcomingTests() {
+            const tests = JSON.parse(localStorage.getItem('upcomingTests'));
+            const upcomingTestsDiv = document.getElementById('upcomingTests');
+
+            if (tests && tests.length > 0) {
+                tests.forEach((test, index) => {
+                    upcomingTestsDiv.innerHTML += `
+                        <h3>Subject ${index + 1}</h3>
+                        <p>Subject Name: ${test.subjectName}</p>
+                        <p>Date: ${test.subjectDate}</p>
+                        <p>Time: ${test.subjectTime}</p>
+                    `;
+                });
+            } else {
+                upcomingTestsDiv.innerHTML = '<p>No upcoming tests available.</p>';
+            }
+        }
+
+        window.onload = loadUpcomingTests;
+    </script>
+</body>
+</html>

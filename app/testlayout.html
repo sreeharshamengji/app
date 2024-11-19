@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Test</title>
+</head>
+<body>
+    <h1 id="subject">Subject: </h1>
+    <h1 id="time">Time: </h1>
+    <h1 id="questions">Questions: </h1>
+    <button id="startButton"><a href="index.html">Start Test</a></button>
+
+    <script>
+        // Retrieve the saved test data from localStorage
+        const testData = JSON.parse(localStorage.getItem('testData'));
+        
+        // Retrieve the completion status from localStorage
+        const testCompleted = localStorage.getItem('testCompleted');
+
+        if (testData) {
+            // Update the HTML elements with the saved data
+            document.getElementById('subject').textContent = `Subject: ${testData.subjectName}`;
+            document.getElementById('questions').textContent = `Questions: ${testData.questions.length}`;
+            document.getElementById('time').textContent = `Time: ${testData.timeLimit} minutes`;
+        } else {
+            alert('No test data found. Please generate a test first.');
+        }
+
+        // Check if the test has already been completed
+        const startButton = document.getElementById('startButton');
+        if (testCompleted) {
+            startButton.disabled = true;
+            startButton.querySelector('a').textContent = 'Test Already Completed';
+            startButton.style.pointerEvents = 'none'; // Disable link functionality
+        }
+
+        // Function to simulate test submission and save completion status
+        function submitTest() {
+            // Simulate test completion
+            localStorage.setItem('testCompleted', 'true'); // Set flag to indicate completion
+            alert('Test submitted successfully!');
+        }
+
+        // Simulate a test submission event (replace with actual submission logic)
+        // Here, add the submitTest() call in the actual test page when the user finishes
+        // submitTest(); // Uncomment this line when implementing on submission page
+    </script>
+</body>
+</html>

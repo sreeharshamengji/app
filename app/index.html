@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Examination</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        .exam-container {
+            width: 100%;
+            /* border: 2px solid red; */
+            
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .timer p {
+            font-size: 1.2em;
+            color: #333;
+        }
+        #questionContainer {
+            margin: 20px 0;
+            /* border: 2px solid red; */
+            font-size: 130%;
+            width: auto;
+            align-items: center;
+            /* text-align: center; */
+            
+        }
+        .navigation {
+            /* border: 2px solid red; */
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .hidden {
+            display: none;
+        }
+        .question-palette {
+            /* border: 2px solid black; */
+            width: 15rem;
+/* padding: 100px;             */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+
+            /* flex-direction: column; */
+    gap: 20px; /* Increased gap between items */
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 12px;
+    background-color: #fff;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+        }
+        .question-palette button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            border: 1px solid #aaa;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .question-palette button.unvisited {
+            background-color: #ddd;
+        }
+        .question-palette button.visited {
+            background-color: #f44336;
+            color: white;
+        }
+        .question-palette button.answered {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .question-palette button.reviewed {
+            background-color: #FFA500;
+            color: white;
+        }
+        .flex{
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            /* border: 2px solid red; */
+            width: 100%;
+            margin-left: 0;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="exam-container">
+        <div class="header">
+            <h1>Online Exam - <span id="subjectName">Sample Subject</span></h1>
+            <div class="timer">
+                <p>Time Left: <span id="timeLeft">00:00</span></p> <!-- Timer display -->
+            </div>
+        </div>
+        <div class="flex">
+            <div>
+                <div id="questionContainer"></div>
+                <div class="navigation">
+                    <button id="prevBtn" onclick="prevQuestion()">Previous</button>
+                    <button id="reviewBtn" onclick="reviewQuestion()">Review</button>
+                    <button id="nextBtn" onclick="nextQuestion()">Next</button>
+                </div>
+                <center><button id="submitBtn" onclick="submitExam()" class="hidden">Submit</button></center>
+            </div>
+            <div class="question-palette" id="questionPalette"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let reviewedQuestions = new Set();
+        const answers = [];
+        let timerInterval;
+
+        // Retrieve test data from localStorage
+        const testData = JSON.parse(localStorage.getItem('testData')) || { subjectName: "Default Subject", questions: [], timeLimit: 10 };
+        document.getElementById('subjectName').textContent = testData.subjectName;
+
+        // Timer setup
+        let timeLeft = (testData.timeLimit || 10) * 60; // Default to 10 minutes if timeLimit is undefined
+
+        function startCountdown() {
+            const timeDisplay = document.getElementById('timeLeft');
+
+            timerInterval = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    submitExam(); // Auto-submit when time is up
+                } else {
+                    timeLeft--;
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            const questionContainer = document.getElementById('questionContainer');
+            if (testData.questions.length === 0) {
+                questionContainer.innerHTML = "<p>No questions available. Please generate questions first.</p>";
+                return;
+            }
+            const question = testData.questions[currentQuestionIndex];
+            questionContainer.innerHTML = ` 
+                <b><h3>Q ${currentQuestionIndex + 1}: ${question.question}</h3></b>
+                <div>
+                    <p><input type="radio" name="option" value="1" onclick="selectOption(1)"> ${question.options[0]}</p>
+                    <p><input type="radio" name="option" value="2" onclick="selectOption(2)"> ${question.options[1]}</p>
+                    <p><input type="radio" name="option" value="3" onclick="selectOption(3)"> ${question.options[2]}</p>
+                    <p><input type="radio" name="option" value="4" onclick="selectOption(4)"> ${question.options[3]}</p>
+                </div>
+            `;
+            updatePalette();
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').disabled = currentQuestionIndex === testData.questions.length - 1;
+            document.getElementById('submitBtn').classList.toggle('hidden', currentQuestionIndex !== testData.questions.length - 1);
+        }
+
+        function createPalette() {
+            const questionPalette = document.getElementById('questionPalette');
+            questionPalette.innerHTML = '';
+            testData.questions.forEach((_, index) => {
+                const button = document.createElement('button');
+                button.textContent = index + 1;
+                button.classList.add('unvisited');
+                button.onclick = () => jumpToQuestion(index);
+                questionPalette.appendChild(button);
+                answers[index] = null;
+            });
+            updatePalette();
+        }
+
+        function updatePalette() {
+            const paletteButtons = document.querySelectorAll('#questionPalette button');
+            paletteButtons.forEach((button, index) => {
+                button.className = '';
+                if (reviewedQuestions.has(index)) {
+                    button.classList.add('reviewed');
+                } else if (answers[index] !== null) {
+                    button.classList.add('answered');
+                } else if (index <= currentQuestionIndex) {
+                    button.classList.add('visited');
+                } else {
+                    button.classList.add('unvisited');
+                }
+            });
+        }
+
+        function selectOption(option) {
+            answers[currentQuestionIndex] = option;
+            updatePalette();
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < testData.questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        function reviewQuestion() {
+            reviewedQuestions.add(currentQuestionIndex);
+            updatePalette();
+            alert(`Marked question ${currentQuestionIndex + 1} for review.`);
+        }
+
+        function jumpToQuestion(index) {
+            currentQuestionIndex = index;
+            loadQuestion();
+        }
+
+        function submitExam() {
+            clearInterval(timerInterval);
+            alert("Exam submitted!");
+
+            let totalScore = 0;
+            const marks = [];
+
+            testData.questions.forEach((question, index) => {
+                const answer = answers[index];
+                const isCorrect = answer == question.correctOption;
+                const result = isCorrect ? 'Correct' : 'Incorrect';
+
+                if (isCorrect) {
+                    totalScore += 1;
+                }
+
+                marks.push({
+                    question: question.question,
+                    result: result,
+                    hint: isCorrect ? '' : question.hint
+                });
+            });
+
+            const marksCard = {
+                totalScore: totalScore,
+                marks: marks
+            };
+            localStorage.setItem('marksCard', JSON.stringify(marksCard));
+            window.location.href = 'markscard.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (testData.questions.length === 0) {
+                alert("No questions found. Please generate questions first.");
+            } else {
+                loadQuestion();
+                createPalette();
+                startCountdown(); // Start the countdown timer
+            }
+        });
+    </script>
+</body>
+</html>

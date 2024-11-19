@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marks Card</title>
+    <link rel="stylesheet" href="style.css">
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <div class="menu">
+        <ul>
+            <li><a href="test.html">Test</a></li>
+            <li><a href="upcoming_test.html">Upcoming Test</a></li>
+            <li><a href="generate_test.html">Generate Test</a></li>
+            <li><a href="generate_upcoming_test.html">Generate Upcoming Test</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h2>Marks Card</h2>
+        <p id="totalScore"></p>
+        <div id="questionResults"></div>
+        <button onclick="goBackToTest()">Back to Test</button>
+    </div>
+
+    <script>
+       window.onload = function() {
+    const marksCard = JSON.parse(localStorage.getItem('marksCard'));
+
+    if (marksCard) {
+        document.getElementById('totalScore').innerText = `Total Score: ${marksCard.totalScore}`;
+
+        const questionResults = document.getElementById('questionResults');
+        marksCard.marks.forEach((mark, index) => {
+            const resultItem = document.createElement('div');
+            resultItem.innerHTML = `
+                <h4>Question ${index + 1}: ${mark.question}</h4>
+                <p>Result: ${mark.result}</p>
+                ${mark.result === 'Incorrect' ? `<p>Hint: ${mark.hint}</p>` : ''}
+            `;
+            questionResults.appendChild(resultItem);
+        });
+
+        // Send data to PHP file
+        saveMarksToDatabase(marksCard);
+    } else {
+        alert('No marks card data found. Please ensure the test was submitted.');
+    }
+};
+
+// Function to send marks data to PHP
+function saveMarksToDatabase(marksCard) {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "save_marks.php", true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+
+    const data = {
+        username: "student1@example.com", // Replace with dynamic username if available
+        num_of_questions: marksCard.marks.length,
+        num_of_correct_answers: marksCard.marks.filter(mark => mark.result === "Correct").length
+    };
+
+    xhr.send(JSON.stringify(data));
+
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            console.log("Marks saved successfully.");
+        } else {
+            console.error("Error saving marks:", xhr.responseText);
+        }
+    };
+}
+
+
+    </script>
+</body>
+</html>

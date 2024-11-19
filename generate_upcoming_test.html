@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Upcoming Test</title>
+</head>
+<body>
+    <h1>Generate Upcoming Test</h1>
+    <form id="generateForm">
+        <label for="numSubjects">Enter number of subjects:</label>
+        <input type="number" id="numSubjects" min="1" required>
+        <button type="button" onclick="generateFields()">Generate</button>
+    </form>
+
+    <form id="testForm" style="display:none;">
+        <div id="subjectFields"></div>
+        <button type="button" onclick="saveData()">Save Data</button>
+    </form>
+    <a href="upcoming_test.html">Upcoming_Test</a>
+
+    <script>
+        function generateFields() {
+            const numSubjects = document.getElementById('numSubjects').value;
+            const subjectFields = document.getElementById('subjectFields');
+            subjectFields.innerHTML = '';
+
+            for (let i = 1; i <= numSubjects; i++) {
+                subjectFields.innerHTML += `
+                    <h3>Subject ${i}</h3>
+                    <label for="subjectName${i}">Subject Name:</label>
+                    <input type="text" id="subjectName${i}" required><br>
+                    <label for="subjectDate${i}">Date:</label>
+                    <input type="date" id="subjectDate${i}" required><br>
+                    <label for="subjectTime${i}">Time:</label>
+                    <input type="time" id="subjectTime${i}" required><br><br>
+                `;
+            }
+
+            document.getElementById('testForm').style.display = 'block';
+        }
+
+        function saveData() {
+            const numSubjects = document.getElementById('numSubjects').value;
+            const tests = [];
+
+            for (let i = 1; i <= numSubjects; i++) {
+                const test = {
+                    subjectName: document.getElementById(`subjectName${i}`).value,
+                    subjectDate: document.getElementById(`subjectDate${i}`).value,
+                    subjectTime: document.getElementById(`subjectTime${i}`).value
+                };
+                tests.push(test);
+            }
+
+            localStorage.setItem('upcomingTests', JSON.stringify(tests));
+            alert('Data saved successfully!');
+        }
+    </script>
+</body>
+</html>
